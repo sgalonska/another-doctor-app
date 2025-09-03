@@ -12,11 +12,46 @@ module.exports = {
       center: true,
       padding: "2rem",
       screens: {
-        "2xl": "1400px",
+        sm: "640px",
+        md: "768px", 
+        lg: "1024px",
+        xl: "1200px",
+        "2xl": "1200px", // Match Another Doctor container max-width
       },
+    },
+    fontFamily: {
+      sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+      mono: ['SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'monospace'],
     },
     extend: {
       colors: {
+        // Another Doctor brand colors
+        brand: {
+          teal: {
+            DEFAULT: '#287a7d',
+            dark: '#1e6b6e',
+            light: '#4a9497',
+          },
+          coral: {
+            DEFAULT: '#eb7d68',
+            dark: '#d66b56',
+            light: '#f29684',
+          },
+        },
+        text: {
+          dark: '#1a1a1a',
+          gray: '#6b7280',
+          light: '#9ca3af',
+        },
+        bg: {
+          light: '#f8fafb',
+          gradient: {
+            from: '#f0f9ff',
+            to: '#fef3f2',
+          },
+        },
+        
+        // Keep shadcn/ui design system colors
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -50,6 +85,11 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+      },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+        'brand-gradient': 'linear-gradient(135deg, #f0f9ff 0%, #fef3f2 100%)',
       },
       borderRadius: {
         lg: "var(--radius)",

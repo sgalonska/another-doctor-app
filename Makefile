@@ -89,6 +89,28 @@ infra-apply: ## Apply terraform changes
 infra-destroy: ## Destroy terraform resources
 	cd infra/terraform && terraform destroy -var-file=environments/dev.tfvars
 
+# GCP deployment commands
+deploy-gcp-dev: ## Deploy to GCP development environment
+	./scripts/deploy-gcp.sh -p $(GCP_PROJECT_ID) -e dev
+
+deploy-gcp-staging: ## Deploy to GCP staging environment
+	./scripts/deploy-gcp.sh -p $(GCP_PROJECT_ID) -e staging
+
+deploy-gcp-prod: ## Deploy to GCP production environment
+	./scripts/deploy-gcp.sh -p $(GCP_PROJECT_ID) -e prod
+
+gcp-local-test: ## Start GCP-like environment locally
+	docker-compose -f docker-compose.gcp.yml up
+
+terraform-plan: ## Plan Terraform infrastructure changes
+	cd infra/gcp && terraform plan -var-file="terraform.tfvars"
+
+terraform-apply: ## Apply Terraform infrastructure changes
+	cd infra/gcp && terraform apply -var-file="terraform.tfvars"
+
+terraform-destroy: ## Destroy Terraform infrastructure
+	cd infra/gcp && terraform destroy -var-file="terraform.tfvars"
+
 # Combined commands
 install-all: install-packages install-backend install-frontend install-workers ## Install all dependencies
 

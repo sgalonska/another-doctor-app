@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -54,6 +56,38 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  /* Another Doctor brand-specific component styles */
+  .bg-brand-gradient {
+    background: linear-gradient(135deg, #f0f9ff 0%, #fef3f2 100%);
+  }
+  
+  .bg-grid-white\/\[0\.02\] {
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  }
+  
+  .bg-grid-16 {
+    background-size: 16px 16px;
+  }
+  
+  /* Smooth transitions for interactive elements */
+  .transition-all {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+  
+  /* Focus styles for accessibility */
+  .focus-brand {
+    @apply focus:outline-none focus:ring-2 focus:ring-brand-teal focus:ring-offset-2;
   }
 }
