@@ -11,11 +11,23 @@ setup: ## Initial project setup
 	cp .env.example .env
 	@echo "Please edit .env file with your configuration"
 
-dev-up: ## Start development services (postgres, redis, qdrant)
-	docker-compose up -d
+dev-up: ## Start complete development environment
+	./scripts/dev-start.sh
+
+dev-up-tools: ## Start development environment with admin tools
+	./scripts/dev-start.sh --with-tools
+
+dev-up-seed: ## Start development environment with seed data
+	./scripts/dev-start.sh --seed
 
 dev-down: ## Stop development services
-	docker-compose down
+	./scripts/dev-stop.sh
+
+dev-reset: ## Reset development environment (removes all data)
+	./scripts/dev-reset.sh
+
+dev-logs: ## Show development logs (usage: make dev-logs SERVICE=backend)
+	./scripts/dev-logs.sh $(SERVICE)
 
 install-backend: ## Install backend dependencies
 	cd apps/backend && pip install -r requirements.txt && pip install -e ../../packages/py-utils

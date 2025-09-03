@@ -1,0 +1,31 @@
+service:
+  http_port: 6333
+  grpc_port: 6334
+  enable_cors: true
+
+storage:
+  # Storage configuration for development
+  storage_path: /qdrant/storage
+  snapshots_path: /qdrant/snapshots
+  
+  # Performance settings for development
+  performance:
+    max_search_threads: 2
+    max_optimization_threads: 1
+
+# Logging configuration
+log_level: INFO
+
+# Memory management
+memory:
+  # Limit memory usage for development
+  max_memory: 512MB
+
+# Development-friendly settings
+cluster:
+  enabled: false
+
+# API configuration
+api:
+  enable_swagger_ui: true
+  max_request_size_mb: 32

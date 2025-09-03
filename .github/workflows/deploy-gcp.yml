@@ -1,0 +1,282 @@
+name: Deploy to GCP
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+        - dev
+        - staging  
+        - prod
+      skip_tests:
+        description: 'Skip running tests'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: us-central1
+  ARTIFACT_REGISTRY: us-central1-docker.pkg.dev
+
+jobs:
+  test:
+    if: ${{ !inputs.skip_tests }}
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install backend dependencies
+      run: |
+        cd apps/backend
+        pip install -r requirements.txt
+        pip install -e ../../packages/py-utils
+
+    - name: Run backend tests
+      env:
+        DATABASE_URL: postgresql://postgres:password@localhost:5432/test_db
+        REDIS_URL: redis://localhost:6379
+        ENVIRONMENT: testing
+      run: |
+        cd apps/backend
+        python -m pytest tests/ -v --tb=short
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: apps/frontend/package-lock.json
+
+    - name: Install frontend dependencies
+      run: |
+        cd apps/frontend
+        npm ci
+
+    - name: Run frontend tests
+      run: |
+        cd apps/frontend
+        npm test -- --coverage --watchAll=false
+
+    - name: Run frontend linting
+      run: |
+        cd apps/frontend
+        npm run lint
+
+    - name: Run frontend type checking
+      run: |
+        cd apps/frontend
+        npm run type-check
+
+  build-and-deploy:
+    needs: test
+    if: always() && (needs.test.result == 'success' || inputs.skip_tests)
+    runs-on: ubuntu-latest
+    
+    environment: 
+      name: ${{ inputs.environment || 'prod' }}
+      url: ${{ steps.deploy.outputs.frontend_url }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        export_default_credentials: true
+
+    - name: Configure Docker for Artifact Registry
+      run: |
+        gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+    - name: Set environment variables
+      run: |
+        echo "ENVIRONMENT=${{ inputs.environment || 'prod' }}" >> $GITHUB_ENV
+        echo "IMAGE_TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
+        echo "ARTIFACT_REGISTRY_PREFIX=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/another-doctor-${{ inputs.environment || 'prod' }}-repo" >> $GITHUB_ENV
+
+    - name: Build and push backend image
+      run: |
+        docker build \
+          -f infra/docker/backend.Dockerfile \
+          -t ${{ env.ARTIFACT_REGISTRY_PREFIX }}/backend:${{ env.IMAGE_TAG }} \
+          -t ${{ env.ARTIFACT_REGISTRY_PREFIX }}/backend:latest \
+          --target production \
+          .
+        docker push ${{ env.ARTIFACT_REGISTRY_PREFIX }}/backend:${{ env.IMAGE_TAG }}
+        docker push ${{ env.ARTIFACT_REGISTRY_PREFIX }}/backend:latest
+
+    - name: Build and push frontend image
+      run: |
+        docker build \
+          -f infra/docker/frontend.Dockerfile \
+          -t ${{ env.ARTIFACT_REGISTRY_PREFIX }}/frontend:${{ env.IMAGE_TAG }} \
+          -t ${{ env.ARTIFACT_REGISTRY_PREFIX }}/frontend:latest \
+          --target production \
+          .
+        docker push ${{ env.ARTIFACT_REGISTRY_PREFIX }}/frontend:${{ env.IMAGE_TAG }}
+        docker push ${{ env.ARTIFACT_REGISTRY_PREFIX }}/frontend:latest
+
+    - name: Build and push workers image
+      run: |
+        docker build \
+          -f infra/docker/workers.Dockerfile \
+          -t ${{ env.ARTIFACT_REGISTRY_PREFIX }}/workers:${{ env.IMAGE_TAG }} \
+          -t ${{ env.ARTIFACT_REGISTRY_PREFIX }}/workers:latest \
+          --target production \
+          .
+        docker push ${{ env.ARTIFACT_REGISTRY_PREFIX }}/workers:${{ env.IMAGE_TAG }}
+        docker push ${{ env.ARTIFACT_REGISTRY_PREFIX }}/workers:latest
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.5.0
+        terraform_wrapper: false
+
+    - name: Deploy infrastructure
+      id: deploy
+      run: |
+        cd infra/gcp
+        
+        # Create terraform.tfvars
+        cat > terraform.tfvars <<EOF
+        project_id  = "${{ env.PROJECT_ID }}"
+        region      = "${{ env.REGION }}"
+        environment = "${{ env.ENVIRONMENT }}"
+        app_name    = "another-doctor"
+        EOF
+        
+        # Initialize and apply
+        terraform init
+        terraform plan -var-file="terraform.tfvars"
+        terraform apply -var-file="terraform.tfvars" -auto-approve
+        
+        # Export outputs
+        echo "frontend_url=$(terraform output -raw frontend_url)" >> $GITHUB_OUTPUT
+        echo "backend_url=$(terraform output -raw backend_url)" >> $GITHUB_OUTPUT
+
+    - name: Run database migrations
+      run: |
+        # Get Cloud SQL connection info
+        cd infra/gcp
+        CONNECTION_NAME=$(terraform output -raw database_connection_name)
+        
+        # Run migrations via Cloud SQL Proxy
+        gcloud sql connect $CONNECTION_NAME --user=app_user <<EOF
+        \c another_doctor;
+        -- Migrations would be run here via a temporary Cloud Run job
+        -- For now, we'll rely on the backend startup script to handle migrations
+        EOF
+
+    - name: Verify deployment
+      run: |
+        BACKEND_URL="${{ steps.deploy.outputs.backend_url }}"
+        FRONTEND_URL="${{ steps.deploy.outputs.frontend_url }}"
+        
+        # Wait for services to be ready
+        sleep 30
+        
+        # Test backend health
+        curl -f "$BACKEND_URL/health" || exit 1
+        
+        # Test frontend
+        curl -f "$FRONTEND_URL" || exit 1
+        
+        echo "✅ Deployment verification successful!"
+
+    - name: Notify Slack
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#deployments'
+        message: |
+          Deployment to ${{ env.ENVIRONMENT }} environment: ${{ job.status }}
+          Frontend: ${{ steps.deploy.outputs.frontend_url }}
+          Backend: ${{ steps.deploy.outputs.backend_url }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  performance-test:
+    needs: build-and-deploy
+    if: ${{ inputs.environment == 'staging' || inputs.environment == 'prod' }}
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run load tests
+      run: |
+        # Install k6 for load testing
+        curl -s https://github.com/grafana/k6/releases/download/v0.45.0/k6-v0.45.0-linux-amd64.tar.gz | tar xz
+        sudo mv k6-v0.45.0-linux-amd64/k6 /usr/local/bin/
+        
+        # Run basic load test
+        cat > load-test.js <<EOF
+        import http from 'k6/http';
+        import { check } from 'k6';
+        
+        export let options = {
+          stages: [
+            { duration: '2m', target: 10 },
+            { duration: '5m', target: 10 },
+            { duration: '2m', target: 0 },
+          ],
+        };
+        
+        export default function() {
+          let response = http.get('${{ needs.build-and-deploy.outputs.backend_url }}/health');
+          check(response, {
+            'status is 200': (r) => r.status === 200,
+            'response time < 500ms': (r) => r.timings.duration < 500,
+          });
+        }
+        EOF
+        
+        k6 run load-test.js

@@ -1,0 +1,61 @@
+# Full development environment with monitoring and admin tools
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+version: '3.8'
+
+services:
+  # Include admin and monitoring tools for development
+  pgadmin:
+    profiles: ["dev", "admin"]
+    
+  redis-commander:
+    profiles: ["dev", "admin"]
+    
+  prometheus:
+    profiles: ["dev", "monitoring"]
+    
+  grafana:
+    profiles: ["dev", "monitoring"]
+
+  # Development-specific configurations
+  backend:
+    profiles: ["dev"]
+    ports:
+      - "8000:8000"
+      - "5678:5678"  # Python debugger port
+    environment:
+      - PYTHONPATH=/app/apps/backend
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+
+  frontend:
+    profiles: ["dev"]
+    ports:
+      - "3000:3000"
+    stdin_open: true
+    tty: true
+
+  # Add a development database seeder
+  db-seed:
+    build:
+      context: .
+      dockerfile: infra/docker/backend.Dockerfile  
+      target: development
+    profiles: ["dev", "seed"]
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/another_doctor
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - another-doctor
+    command: >
+      sh -c "
+        echo 'Seeding development database...';
+        cd /app/apps/backend;
+        python -c 'from app.db.seed_dev_data import seed_development_data; seed_development_data()';
+        echo 'Database seeded successfully';
+      "
+    volumes:
+      - ./apps/backend:/app/apps/backend
+      - ./packages:/app/packages

@@ -1,0 +1,8 @@
+# GCP Configuration
+project_id = "your-gcp-project-id"
+region     = "us-central1"
+zone       = "us-central1-a"
+
+# Application Configuration
+environment = "prod"
+app_name    = "another-doctor"
