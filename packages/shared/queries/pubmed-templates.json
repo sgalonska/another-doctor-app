@@ -1,0 +1,48 @@
+{
+  "templates": {
+    "critical_limb_ischemia": {
+      "name": "Critical Limb Ischemia",
+      "mesh_terms": ["D016491", "D058729"],
+      "base_query": "(\"Ischemia\"[MeSH] OR \"Peripheral Arterial Disease\"[MeSH] OR \"Critical Limb Ischemia\")",
+      "interventions": {
+        "bypass": "AND (\"Bypass, Surgical\"[MeSH] OR \"distal bypass\" OR \"pedal loop\" OR \"tibial arch\")",
+        "angioplasty": "AND (\"Angioplasty\"[MeSH] OR \"balloon angioplasty\" OR \"PTA\")",
+        "revascularization": "AND (\"revascularization\" OR \"endovascular\" OR \"surgical revascularization\")"
+      },
+      "anatomy": {
+        "foot": "AND (\"Foot\"[MeSH] OR foot OR pedal)",
+        "leg": "AND (\"Leg\"[MeSH] OR \"lower limb\" OR \"lower extremity\")",
+        "tibial": "AND (\"anterior tibial\" OR \"posterior tibial\" OR \"tibial artery\")"
+      },
+      "date_filter": "AND (\"2019/01/01\"[Date - Publication] : \"3000\"[Date - Publication])"
+    },
+    "coronary_artery_disease": {
+      "name": "Coronary Artery Disease",
+      "mesh_terms": ["D003324", "D054058"],
+      "base_query": "(\"Coronary Artery Disease\"[MeSH] OR \"Coronary Disease\"[MeSH] OR \"CAD\")",
+      "interventions": {
+        "stent": "AND (\"Stents\"[MeSH] OR \"stent\" OR \"PCI\" OR \"percutaneous coronary intervention\")",
+        "bypass": "AND (\"Coronary Artery Bypass\"[MeSH] OR \"CABG\" OR \"coronary bypass\")",
+        "angioplasty": "AND (\"Angioplasty, Balloon, Coronary\"[MeSH] OR \"coronary angioplasty\")"
+      },
+      "date_filter": "AND (\"2019/01/01\"[Date - Publication] : \"3000\"[Date - Publication])"
+    },
+    "heart_failure": {
+      "name": "Heart Failure",
+      "mesh_terms": ["D006333"],
+      "base_query": "(\"Heart Failure\"[MeSH] OR \"Cardiac Failure\" OR \"Congestive Heart Failure\")",
+      "interventions": {
+        "device": "AND (\"Heart-Assist Devices\"[MeSH] OR \"LVAD\" OR \"heart pump\")",
+        "transplant": "AND (\"Heart Transplantation\"[MeSH] OR \"heart transplant\")",
+        "medication": "AND (\"ACE inhibitors\" OR \"beta blockers\" OR \"diuretics\")"
+      },
+      "date_filter": "AND (\"2019/01/01\"[Date - Publication] : \"3000\"[Date - Publication])"
+    }
+  },
+  "query_builder": {
+    "instructions": "Combine base_query with relevant intervention and anatomy filters",
+    "example": "For CLI with distal bypass on foot: base_query + interventions.bypass + anatomy.foot + date_filter",
+    "max_results": 50,
+    "sort_options": ["pub_date", "relevance", "author"]
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "templates": {
+    "critical_limb_ischemia": {
+      "name": "Critical Limb Ischemia",
+      "base_search": "critical limb ischemia",
+      "concepts": ["peripheral arterial disease", "ischemia", "vascular surgery"],
+      "interventions": {
+        "bypass": "distal bypass pedal loop",
+        "angioplasty": "balloon angioplasty PTA endovascular",
+        "revascularization": "revascularization limb salvage"
+      },
+      "filters": {
+        "publication_year": "2019:",
+        "type": "article",
+        "cited_by_count": ">5"
+      }
+    },
+    "coronary_artery_disease": {
+      "name": "Coronary Artery Disease", 
+      "base_search": "coronary artery disease",
+      "concepts": ["cardiology", "coronary disease", "heart disease"],
+      "interventions": {
+        "stent": "coronary stent PCI percutaneous intervention",
+        "bypass": "coronary bypass CABG surgical revascularization",
+        "angioplasty": "coronary angioplasty balloon catheter"
+      },
+      "filters": {
+        "publication_year": "2019:",
+        "type": "article",
+        "cited_by_count": ">10"
+      }
+    },
+    "heart_failure": {
+      "name": "Heart Failure",
+      "base_search": "heart failure cardiac failure",
+      "concepts": ["cardiology", "heart failure", "cardiac dysfunction"],
+      "interventions": {
+        "device": "LVAD heart assist device mechanical support",
+        "transplant": "heart transplantation cardiac transplant",
+        "medication": "ACE inhibitor beta blocker diuretic therapy"
+      },
+      "filters": {
+        "publication_year": "2019:",
+        "type": "article",
+        "cited_by_count": ">5"
+      }
+    }
+  },
+  "query_builder": {
+    "base_url": "https://api.openalex.org/works",
+    "parameters": {
+      "per_page": 25,
+      "sort": "publication_year:desc",
+      "search": "constructed from base_search + interventions",
+      "filter": "constructed from filters object"
+    },
+    "example_query": "https://api.openalex.org/works?search=critical limb ischemia distal bypass&filter=publication_year:2019,type:article&per_page=25&sort=publication_year:desc"
+  }
+}

@@ -1,0 +1,41 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "another-doctor-py-utils"
+version = "0.1.0"
+description = "Shared Python utilities for Another Doctor"
+authors = ["Another Doctor Team <team@anotherdoctor.com>"]
+readme = "README.md"
+packages = [{include = "another_doctor_utils", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+httpx = "^0.25.2"
+pydantic = "^2.5.0"
+tenacity = "^8.2.3"
+structlog = "^23.2.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.3"
+pytest-asyncio = "^0.23.2"
+black = "^23.11.0"
+ruff = "^0.1.6"
+mypy = "^1.7.1"
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+
+[tool.ruff]
+select = ["E", "F", "I", "N", "UP", "S", "B", "A", "C4", "ICN", "PIE", "PYI", "PT", "RSE", "RET", "SIM", "PTH"]
+ignore = ["E501", "S101", "S104"]
+line-length = 88
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
