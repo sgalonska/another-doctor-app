@@ -1,6 +1,7 @@
 # Production environment configuration
+# Project ID: another-doctor-471116
 
-project_id  = "another-doctor-prod"
+project_id  = "another-doctor-471116"
 region      = "us-central1"
 zone        = "us-central1-a"
 environment = "prod"

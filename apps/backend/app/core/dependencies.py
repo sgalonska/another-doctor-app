@@ -85,6 +85,7 @@ class DIContainer:
     def __init__(self):
         self._queue_service: Optional[QueueService] = None
         self._upload_service: Optional[UploadService] = None
+        self._monitoring_service = None
 
     def get_queue_service(self) -> QueueService:
         if self._queue_service is None:
@@ -110,6 +111,18 @@ class DIContainer:
             self._upload_service = UploadService(storage)
         return self._upload_service
 
+    def get_monitoring_service(self):
+        if self._monitoring_service is None:
+            if settings.ENVIRONMENT == "development":
+                from app.services.monitoring_service import LocalMonitoringClient, MonitoringService
+                client = LocalMonitoringClient()
+            else:
+                from app.services.monitoring_service import GCPMonitoringClient, MonitoringService
+                client = GCPMonitoringClient()
+            
+            self._monitoring_service = MonitoringService(client)
+        return self._monitoring_service
+
 
 # Global container instance
 container = DIContainer()
@@ -122,3 +135,7 @@ def get_queue_service() -> QueueService:
 
 def get_upload_service() -> UploadService:
     return container.get_upload_service()
+
+
+def get_monitoring_service():
+    return container.get_monitoring_service()

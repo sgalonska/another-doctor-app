@@ -39,4 +39,9 @@ Thumbs.db
 
 # Database
 *.db
-*.sqlite
+*.sqlite# Terraform
+infra/**/.terraform/
+infra/**/terraform.tfstate*
+infra/**/terraform.tfvars
+!infra/**/terraform.tfvars.example
+*.terraform.lock.hcl

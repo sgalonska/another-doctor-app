@@ -42,6 +42,12 @@ variable "app_name" {
   default     = "another-doctor"
 }
 
+variable "domain" {
+  description = "Custom domain for the application (optional)"
+  type        = string
+  default     = ""
+}
+
 # Providers
 provider "google" {
   project = var.project_id

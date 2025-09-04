@@ -4,9 +4,10 @@ import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 
 interface BrandButtonProps extends Omit<ButtonProps, 'variant'> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'ghost-filled';
   loading?: boolean;
   loadingText?: string;
+  asChild?: boolean;
 }
 
 export function BrandButton({ 
@@ -20,9 +21,10 @@ export function BrandButton({
 }: BrandButtonProps) {
   const brandVariants = {
     primary: 'bg-brand-teal text-white hover:bg-brand-teal-dark focus:ring-brand-teal/20',
-    secondary: 'bg-brand-coral text-white hover:bg-brand-coral-dark focus:ring-brand-coral/20',
+    secondary: 'bg-brand-coral text-white hover:bg-brand-coral-dark focus:ring-brand-teal/20',
     outline: 'border-2 border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white focus:ring-brand-teal/20',
     ghost: 'text-brand-teal hover:bg-brand-teal/10 focus:ring-brand-teal/20',
+    'ghost-filled': 'bg-brand-teal/10 text-brand-teal hover:bg-brand-teal/20 focus:ring-brand-teal/20',
   };
 
   return (

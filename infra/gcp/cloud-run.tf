@@ -84,7 +84,7 @@ resource "google_cloud_run_v2_service" "backend" {
 
       env {
         name  = "BACKEND_CORS_ORIGINS"
-        value = "https://${google_cloud_run_v2_service.frontend.uri},http://localhost:3000"
+        value = "https://${google_storage_bucket.frontend.name}.storage.googleapis.com,http://localhost:3000"
       }
 
       liveness_probe {
@@ -120,65 +120,27 @@ resource "google_cloud_run_v2_service" "backend" {
   ]
 }
 
-# Frontend service
-resource "google_cloud_run_v2_service" "frontend" {
-  name     = "${local.name_prefix}-frontend"
-  location = var.region
-  
-  template {
-    service_account = google_service_account.cloud_run.email
-    
-    scaling {
-      min_instance_count = 1
-      max_instance_count = 5
-    }
+# Frontend static website bucket
+resource "google_storage_bucket" "frontend" {
+  name          = "${var.project_id}-${local.name_prefix}-frontend"
+  location      = var.region
+  storage_class = "STANDARD"
 
-    containers {
-      image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.main.repository_id}/frontend:latest"
-      
-      ports {
-        container_port = 3000
-      }
+  uniform_bucket_level_access = true
 
-      resources {
-        limits = {
-          cpu    = "1000m"
-          memory = "1Gi"
-        }
-        cpu_idle = false
-      }
+  website {
+    main_page_suffix = "index.html"
+    not_found_page   = "404.html"
+  }
 
-      env {
-        name  = "NODE_ENV"
-        value = "production"
-      }
-
-      env {
-        name  = "NEXT_PUBLIC_API_URL"
-        value = "${google_cloud_run_v2_service.backend.uri}/api/v1"
-      }
-
-      env {
-        name  = "NEXT_PUBLIC_ENVIRONMENT"
-        value = var.environment
-      }
-
-      liveness_probe {
-        http_get {
-          path = "/"
-          port = 3000
-        }
-        initial_delay_seconds = 30
-        timeout_seconds = 10
-        period_seconds = 30
-        failure_threshold = 3
-      }
-    }
+  cors {
+    origin          = ["*"]
+    method          = ["GET", "HEAD", "OPTIONS"]
+    response_header = ["*"]
+    max_age_seconds = 3600
   }
 
   labels = local.labels
-
-  depends_on = [google_project_service.required_apis]
 }
 
 # Workers service
@@ -342,12 +304,57 @@ resource "google_cloud_run_service_iam_member" "backend_public" {
   member   = "allUsers"
 }
 
-resource "google_cloud_run_service_iam_member" "frontend_public" {
-  location = google_cloud_run_v2_service.frontend.location
-  project  = google_cloud_run_v2_service.frontend.project
-  service  = google_cloud_run_v2_service.frontend.name
-  role     = "roles/run.invoker"
-  member   = "allUsers"
+# Make frontend bucket publicly readable
+resource "google_storage_bucket_iam_member" "frontend_public" {
+  bucket = google_storage_bucket.frontend.name
+  role   = "roles/storage.objectViewer"
+  member = "allUsers"
+}
+
+# Cloud CDN for frontend performance
+resource "google_compute_backend_bucket" "frontend_backend" {
+  name        = "${local.name_prefix}-frontend-backend"
+  description = "Contains frontend static files"
+  bucket_name = google_storage_bucket.frontend.name
+  enable_cdn  = true
+
+  cdn_policy {
+    cache_mode       = "CACHE_ALL_STATIC"
+    default_ttl      = 3600
+    max_ttl          = 86400
+    client_ttl       = 3600
+    negative_caching = true
+  }
+}
+
+# URL map for frontend
+resource "google_compute_url_map" "frontend" {
+  name            = "${local.name_prefix}-frontend-url-map"
+  description     = "Frontend URL map"
+  default_service = google_compute_backend_bucket.frontend_backend.self_link
+}
+
+# HTTPS proxy
+resource "google_compute_target_https_proxy" "frontend" {
+  name    = "${local.name_prefix}-frontend-https-proxy"
+  url_map = google_compute_url_map.frontend.self_link
+  ssl_certificates = [google_compute_managed_ssl_certificate.frontend.self_link]
+}
+
+# SSL certificate
+resource "google_compute_managed_ssl_certificate" "frontend" {
+  name = "${local.name_prefix}-frontend-ssl-cert"
+
+  managed {
+    domains = ["${local.name_prefix}.${var.domain != "" ? var.domain : "${var.project_id}.example.com"}"]
+  }
+}
+
+# Global forwarding rule
+resource "google_compute_global_forwarding_rule" "frontend" {
+  name       = "${local.name_prefix}-frontend-forwarding-rule"
+  target     = google_compute_target_https_proxy.frontend.self_link
+  port_range = "443"
 }
 
 # Private access for internal services

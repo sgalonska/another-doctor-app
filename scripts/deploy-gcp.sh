@@ -30,7 +30,7 @@ print_error() {
 
 # Default values
 ENVIRONMENT="prod"
-PROJECT_ID=""
+PROJECT_ID="another-doctor-471116"
 REGION="us-central1"
 SKIP_TERRAFORM=false
 SKIP_BUILD=false
@@ -41,7 +41,7 @@ show_help() {
     echo "Usage: $0 [options]"
     echo ""
     echo "Options:"
-    echo "  -p, --project-id ID     GCP Project ID (required)"
+    echo "  -p, --project-id ID     GCP Project ID (default: another-doctor-471116)"
     echo "  -r, --region REGION     GCP Region (default: us-central1)"
     echo "  -e, --environment ENV   Environment (dev/staging/prod, default: prod)"
     echo "  --skip-terraform        Skip Terraform infrastructure deployment"
@@ -94,12 +94,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Validate required parameters
-if [ -z "$PROJECT_ID" ]; then
-    print_error "Project ID is required. Use -p or --project-id"
-    show_help
-    exit 1
-fi
+# PROJECT_ID is now set by default, but can be overridden
 
 # Validate environment
 if [[ ! "$ENVIRONMENT" =~ ^(dev|staging|prod)$ ]]; then
@@ -191,11 +186,21 @@ if [ "$SKIP_BUILD" = false ]; then
     docker push "$ARTIFACT_REGISTRY/backend:latest"
     print_success "Backend image pushed!"
     
-    # Build frontend
-    print_status "Building frontend image..."
-    docker build -f infra/docker/frontend.Dockerfile -t "$ARTIFACT_REGISTRY/frontend:latest" --target production .
-    docker push "$ARTIFACT_REGISTRY/frontend:latest"
-    print_success "Frontend image pushed!"
+    # Build frontend static files
+    print_status "Building frontend static files..."
+    cd apps/frontend
+    pnpm install
+    BACKEND_URL=$(terraform -chdir=../../infra/gcp output -raw backend_url)
+    NEXT_PUBLIC_API_URL="${BACKEND_URL}/api/v1" pnpm build:static
+    print_success "Frontend static files built!"
+    
+    # Deploy to Cloud Storage
+    print_status "Deploying frontend to Cloud Storage..."
+    cd ../../infra/gcp
+    FRONTEND_BUCKET="${PROJECT_ID}-another-doctor-${ENVIRONMENT}-frontend"
+    cd ../..
+    gsutil -m rsync -r -d ./apps/frontend/out gs://$FRONTEND_BUCKET/
+    print_success "Frontend deployed to Cloud Storage!"
     
     # Build workers
     print_status "Building workers image..."
@@ -231,14 +236,16 @@ print_status "Getting service URLs..."
 if [ "$SKIP_TERRAFORM" = false ]; then
     cd infra/gcp
     BACKEND_URL=$(terraform output -raw backend_url)
-    FRONTEND_URL=$(terraform output -raw frontend_url)
+    FRONTEND_CDN_URL=$(terraform output -raw frontend_url)
+    FRONTEND_BUCKET_URL=$(terraform output -raw frontend_bucket_url)
     cd ../..
     
     echo ""
     print_success "Deployment completed successfully!"
     echo ""
     echo "🌐 Service URLs:"
-    echo "  Frontend: $FRONTEND_URL"
+    echo "  Frontend (CDN): $FRONTEND_CDN_URL"
+    echo "  Frontend (Direct): $FRONTEND_BUCKET_URL"
     echo "  Backend:  $BACKEND_URL"
     echo ""
     echo "🔧 Next steps:"

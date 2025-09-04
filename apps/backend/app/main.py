@@ -4,6 +4,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
 from app.core.config import settings
 from app.api.api_v1.api import api_router
+from app.middleware.monitoring import MonitoringMiddleware
 
 app = FastAPI(
     title="Another Doctor API",
@@ -22,6 +23,7 @@ if settings.BACKEND_CORS_ORIGINS:
     )
 
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.ALLOWED_HOSTS)
+app.add_middleware(MonitoringMiddleware)
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 

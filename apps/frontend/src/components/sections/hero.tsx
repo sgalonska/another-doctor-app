@@ -1,7 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
 import { ArrowRight, Upload, Search, Users } from 'lucide-react';
-import { CTAButton, BrandButton } from '@/components/ui/brand-button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
@@ -36,17 +35,19 @@ export function Hero({ className }: HeroProps) {
 
           {/* CTA buttons */}
           <div className="mb-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link href="/get-started">
-              <CTAButton>
-                Get Started Free
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </CTAButton>
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center px-8 py-3 text-base font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 bg-brand-teal text-white hover:bg-brand-teal-dark rounded-md"
+            >
+              Start Diagnosis Analysis
+              <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
             
-            <Link href="/demo">
-              <BrandButton variant="outline">
-                Watch Demo
-              </BrandButton>
+            <Link
+              href="/demo"
+              className="inline-flex items-center justify-center px-8 py-3 text-base font-semibold border-2 border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-white transition-all duration-200 rounded-md"
+            >
+              Watch Demo
             </Link>
           </div>
 

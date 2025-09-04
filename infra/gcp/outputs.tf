@@ -63,8 +63,13 @@ output "backend_url" {
 }
 
 output "frontend_url" {
-  description = "Frontend Cloud Run service URL"
-  value       = google_cloud_run_v2_service.frontend.uri
+  description = "Frontend URL (via Cloud CDN)"
+  value       = "https://${google_compute_global_forwarding_rule.frontend.ip_address}"
+}
+
+output "frontend_bucket_url" {
+  description = "Direct frontend bucket URL"
+  value       = "https://storage.googleapis.com/${google_storage_bucket.frontend.name}"
 }
 
 output "workers_url" {
@@ -112,7 +117,8 @@ output "deployment_info" {
     environment         = var.environment
     artifact_registry   = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.main.repository_id}"
     backend_url         = google_cloud_run_v2_service.backend.uri
-    frontend_url        = google_cloud_run_v2_service.frontend.uri
+    frontend_url        = "https://${google_compute_global_forwarding_rule.frontend.ip_address}"
+    frontend_bucket     = google_storage_bucket.frontend.name
     storage_bucket      = google_storage_bucket.main.name
   }
 }
