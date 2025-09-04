@@ -52,7 +52,7 @@ data "cloudflare_zone" "main" {
 resource "cloudflare_r2_bucket" "uploads" {
   account_id = var.cloudflare_account_id
   name       = "another-doctor-uploads-${var.environment}"
-  location   = "auto"
+  location   = "WNAM"
 }
 
 # KV Namespace for caching
@@ -65,7 +65,7 @@ resource "cloudflare_workers_kv_namespace" "cache" {
 resource "cloudflare_record" "api" {
   zone_id = data.cloudflare_zone.main.id
   name    = var.environment == "prod" ? "api" : "api-${var.environment}"
-  value   = "your-backend-server.com"  # Update with actual backend URL
+  content = "your-backend-server.com"  # Update with actual backend URL
   type    = "CNAME"
   proxied = true
 }
@@ -73,7 +73,7 @@ resource "cloudflare_record" "api" {
 resource "cloudflare_record" "app" {
   zone_id = data.cloudflare_zone.main.id
   name    = var.environment == "prod" ? "@" : var.environment
-  value   = "your-frontend-pages.pages.dev"  # Update with Cloudflare Pages URL
+  content = "your-frontend-pages.pages.dev"  # Update with Cloudflare Pages URL
   type    = "CNAME"
   proxied = true
 }
