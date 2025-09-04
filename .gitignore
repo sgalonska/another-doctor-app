@@ -39,7 +39,27 @@ Thumbs.db
 
 # Database
 *.db
-*.sqlite# Terraform
+*.sqlite
+
+# Next.js
+.next/
+out/
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+.venv/
+*.egg-info/
+
+# TypeScript
+*.tsbuildinfo
+
+# Terraform
 infra/**/.terraform/
 infra/**/terraform.tfstate*
 infra/**/terraform.tfvars
