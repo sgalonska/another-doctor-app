@@ -11,9 +11,7 @@
     "type-check": "turbo run type-check",
     "clean": "turbo run clean",
     "dev:frontend": "turbo run dev --filter=apps/frontend",
-    "dev:workers": "turbo run dev --filter=infra/cloudflare/workers",
     "build:frontend": "turbo run build --filter=apps/frontend",
-    "build:workers": "turbo run build --filter=infra/cloudflare/workers",
     "lint:all": "turbo run lint",
     "test:all": "turbo run test"
   },
@@ -28,7 +26,6 @@
   },
   "workspaces": [
     "apps/frontend",
-    "packages/ts-utils",
-    "infra/cloudflare/workers"
+    "packages/ts-utils"
   ]
 }
