@@ -17,18 +17,12 @@ export function Logo({
   href = '/',
   priority = false 
 }: LogoProps) {
-  const logoSize = brand.logoSizes[variant];
-  
   const logoElement = (
     <Image
       src={brand.assets.logo.primary}
       alt="Another Doctor"
       width={200} // Base width, will be controlled by CSS
       height={45} // Base height
-      style={{
-        width: logoSize.width,
-        height: logoSize.height,
-      }}
       className={cn(
         'object-contain',
         variant === 'nav' && 'h-[45px] w-auto',

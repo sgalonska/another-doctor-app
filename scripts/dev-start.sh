@@ -52,10 +52,10 @@ if [ "$(docker-compose ps -q)" ]; then
     docker-compose down
 fi
 
-print_status "Starting core services..."
+print_status "Starting infrastructure services..."
 
-# Start core services first
-docker-compose up -d postgres redis qdrant minio
+# Start infrastructure services (no MinIO for GCP deployment)
+docker-compose -f docker-compose.infrastructure.yml up -d
 
 print_status "Waiting for core services to be healthy..."
 
@@ -64,11 +64,10 @@ MAX_ATTEMPTS=30
 ATTEMPT=0
 
 while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-    if docker-compose exec -T postgres pg_isready -U postgres > /dev/null 2>&1 && \
-       docker-compose exec -T redis redis-cli ping > /dev/null 2>&1 && \
-       curl -sf http://localhost:6333/health > /dev/null 2>&1 && \
-       curl -sf http://localhost:9000/minio/health/live > /dev/null 2>&1; then
-        print_success "Core services are ready!"
+    if docker-compose -f docker-compose.infrastructure.yml exec -T postgres pg_isready -U postgres > /dev/null 2>&1 && \
+       docker-compose -f docker-compose.infrastructure.yml exec -T redis redis-cli ping > /dev/null 2>&1 && \
+       curl -sf http://localhost:6333/readyz > /dev/null 2>&1; then
+        print_success "Infrastructure services are ready!"
         break
     fi
     
@@ -78,70 +77,47 @@ while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
 done
 
 if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
-    print_error "Core services failed to start within expected time"
-    docker-compose logs
+    print_error "Infrastructure services failed to start within expected time"
+    print_error "Diagnosing issues..."
+    
+    # Check individual services
+    echo "Checking PostgreSQL..."
+    if ! docker-compose -f docker-compose.infrastructure.yml exec -T postgres pg_isready -U postgres > /dev/null 2>&1; then
+        print_error "PostgreSQL is not ready"
+        docker-compose -f docker-compose.infrastructure.yml logs --tail=10 postgres
+    fi
+    
+    echo "Checking Redis..."
+    if ! docker-compose -f docker-compose.infrastructure.yml exec -T redis redis-cli ping > /dev/null 2>&1; then
+        print_error "Redis is not ready"
+        docker-compose -f docker-compose.infrastructure.yml logs --tail=10 redis
+    fi
+    
+    echo "Checking Qdrant..."
+    if ! curl -sf http://localhost:6333/readyz > /dev/null 2>&1; then
+        print_error "Qdrant is not ready (testing /readyz endpoint)"
+        docker-compose -f docker-compose.infrastructure.yml logs --tail=10 qdrant
+    fi
+    
+    print_error "Try running 'docker-compose ps' to check container status"
+    print_error "Or run 'make dev-logs' to see detailed logs"
     exit 1
 fi
 
-print_status "Setting up MinIO bucket..."
-docker-compose up -d minio-setup
-sleep 5
-
-print_status "Starting application services..."
-
-# Start application services
-docker-compose up -d backend frontend workers
-
-print_status "Waiting for application services..."
-
-# Wait for backend to be ready
-ATTEMPT=0
-while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-    if curl -sf http://localhost:8000/health > /dev/null 2>&1; then
-        print_success "Backend service is ready!"
-        break
-    fi
-    
-    ATTEMPT=$((ATTEMPT + 1))
-    echo -n "."
-    sleep 3
-done
-
-if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
-    print_warning "Backend service may not be ready yet. Check logs with: docker-compose logs backend"
-fi
-
-# Wait for frontend to be ready  
-ATTEMPT=0
-while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-    if curl -sf http://localhost:3000 > /dev/null 2>&1; then
-        print_success "Frontend service is ready!"
-        break
-    fi
-    
-    ATTEMPT=$((ATTEMPT + 1))
-    echo -n "."
-    sleep 3
-done
-
-if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
-    print_warning "Frontend service may not be ready yet. Check logs with: docker-compose logs frontend"
-fi
+print_success "🎉 Infrastructure services are running!"
 
 echo ""
-print_success "🎉 Development environment is running!"
+print_success "📋 Available Infrastructure Services:"
+print_success "   PostgreSQL:         localhost:5432 (postgres/password)"
+print_success "   Redis:              localhost:6379"  
+print_success "   Qdrant:             http://localhost:6333"
+
 echo ""
-echo "📋 Available Services:"
-echo "   Frontend:           http://localhost:3000"
-echo "   Backend API:        http://localhost:8000"
-echo "   API Documentation:  http://localhost:8000/docs"
-echo "   PostgreSQL:         localhost:5432 (postgres/password)"
-echo "   Redis:              localhost:6379"
-echo "   Qdrant:             http://localhost:6333"
-echo "   MinIO Console:      http://localhost:9001 (minioadmin/minioadmin)"
-echo "   MinIO API:          http://localhost:9000"
+print_success "📝 Next Steps:"
+print_success "   1. Start Backend:   ./scripts/run-backend-local.sh"
+print_success "   2. Start Frontend:  ./scripts/run-frontend-local.sh"
 echo ""
-echo "🔧 Optional Services (use --with-tools flag):"
+print_success "🔧 Optional Services (use --with-tools flag):"
 echo "   PgAdmin:            http://localhost:5050 (admin@anotherdoctor.local/admin)"
 echo "   Redis Commander:    http://localhost:8081"
 echo "   Prometheus:         http://localhost:9090"
@@ -174,4 +150,4 @@ if [[ "$1" == "--seed" ]] || [[ "$2" == "--seed" ]]; then
     print_success "Database seeded with development data!"
 fi
 
-print_success "Development environment is ready! Happy coding! 🚀"
+print_success "Infrastructure is ready! Start your app servers manually. 🚀"

@@ -95,12 +95,16 @@ export function Header({ className, variant = 'default' }: HeaderProps) {
 
         {/* Action buttons */}
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" asChild className="hidden md:inline-flex">
-            <Link href="/login">Log in</Link>
-          </Button>
-          <Button asChild className="bg-brand-teal hover:bg-brand-teal-dark">
-            <Link href="/signup">Get Started</Link>
-          </Button>
+          <Link href="/login">
+            <Button variant="ghost" className="hidden md:inline-flex">
+              Log in
+            </Button>
+          </Link>
+          <Link href="/signup">
+            <Button className="bg-brand-teal hover:bg-brand-teal-dark">
+              Get Started
+            </Button>
+          </Link>
         </div>
       </div>
     </header>

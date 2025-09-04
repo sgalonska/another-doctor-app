@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional, Union
-from pydantic import AnyHttpUrl, BaseSettings, validator
+from pydantic import AnyHttpUrl, field_validator, Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
@@ -13,11 +14,13 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = "another_doctor"
     SQLALCHEMY_DATABASE_URI: Optional[str] = None
 
-    @validator("SQLALCHEMY_DATABASE_URI", pre=True)
-    def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
+    @field_validator("SQLALCHEMY_DATABASE_URI", mode="before")
+    @classmethod
+    def assemble_db_connection(cls, v: Optional[str], info) -> Any:
         if isinstance(v, str):
             return v
-        return f"postgresql://{values.get('POSTGRES_USER')}:{values.get('POSTGRES_PASSWORD')}@{values.get('POSTGRES_SERVER')}/{values.get('POSTGRES_DB')}"
+        values = info.data if hasattr(info, 'data') else {}
+        return f"postgresql+psycopg://{values.get('POSTGRES_USER')}:{values.get('POSTGRES_PASSWORD')}@{values.get('POSTGRES_SERVER')}/{values.get('POSTGRES_DB')}"
 
     # Redis/Queue
     REDIS_URL: str = "redis://localhost:6379"
@@ -26,11 +29,17 @@ class Settings(BaseSettings):
     QDRANT_URL: str = "http://localhost:6333"
     QDRANT_API_KEY: Optional[str] = None
     
-    # Cloudflare R2 (S3 compatible)
-    R2_ENDPOINT_URL: str = ""
-    R2_ACCESS_KEY_ID: str = ""
-    R2_SECRET_ACCESS_KEY: str = ""
-    R2_BUCKET_NAME: str = "another-doctor-uploads"
+    # Google Cloud Storage
+    GCS_BUCKET_NAME: str = "another-doctor-uploads"
+    GCP_PROJECT_ID: str = ""
+    GOOGLE_APPLICATION_CREDENTIALS: Optional[str] = None
+    
+    # Google Cloud Tasks
+    GCP_LOCATION: str = "us-central1"
+    GCP_TASK_QUEUE_NAME: str = "diagnosis-processing"
+    
+    # Environment settings
+    ENVIRONMENT: str = "development"  # development, staging, production
     
     # Stripe
     STRIPE_PUBLIC_KEY: str = ""
@@ -41,25 +50,34 @@ class Settings(BaseSettings):
     PUBMED_API_KEY: Optional[str] = None
     CROSSREF_EMAIL: str = "your-email@domain.com"
     
-    # CORS
-    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
-
-    @validator("BACKEND_CORS_ORIGINS", pre=True)
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
-            return v
-        raise ValueError(v)
+    # CORS  
+    _BACKEND_CORS_ORIGINS: str = "http://localhost:3000"
+    
+    @property
+    def BACKEND_CORS_ORIGINS(self) -> List[str]:
+        import os
+        cors_env = os.getenv("BACKEND_CORS_ORIGINS", self._BACKEND_CORS_ORIGINS)
+        if isinstance(cors_env, str):
+            return [origin.strip() for origin in cors_env.split(",") if origin.strip()]
+        return ["http://localhost:3000"]
 
     # Security
-    ALLOWED_HOSTS: List[str] = ["localhost", "127.0.0.1"]
+    _ALLOWED_HOSTS: str = "localhost,127.0.0.1"
+    
+    @property
+    def ALLOWED_HOSTS(self) -> List[str]:
+        import os
+        hosts_env = os.getenv("ALLOWED_HOSTS", self._ALLOWED_HOSTS)
+        if isinstance(hosts_env, str):
+            return [host.strip() for host in hosts_env.split(",") if host.strip()]
+        return ["localhost", "127.0.0.1"]
     
     # Environment
     ENVIRONMENT: str = "development"
 
-    class Config:
-        case_sensitive = True
-        env_file = ".env"
+    model_config = SettingsConfigDict(
+        case_sensitive=True,
+        env_file=".env"
+    )
 
 settings = Settings()

@@ -1,4 +1,4 @@
-import { Router } from '@cloudflare/itty-router';
+import { Router } from 'itty-router';
 
 export interface Env {
   UPLOADS_BUCKET: R2Bucket;

@@ -25,6 +25,14 @@ app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.ALLOWED_HOSTS)
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
+# Initialize task handlers for local development
+if settings.ENVIRONMENT == "development":
+    try:
+        from app.services.task_handlers import initialize_task_handlers
+        initialize_task_handlers()
+    except Exception as e:
+        print(f"Warning: Failed to initialize task handlers: {e}")
+
 @app.get("/")
 def root():
     return {"message": "Another Doctor API"}

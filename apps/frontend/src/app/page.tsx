@@ -107,12 +107,12 @@ export default function Home() {
               for evidence-based specialist matching.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <BrandButton size="lg" asChild>
-                <Link href="/get-started">Start Free Trial</Link>
-              </BrandButton>
-              <BrandButton variant="outline" size="lg" asChild>
-                <Link href="/contact">Contact Sales</Link>
-              </BrandButton>
+              <Link href="/get-started">
+                <BrandButton size="lg">Start Free Trial</BrandButton>
+              </Link>
+              <Link href="/contact">
+                <BrandButton variant="outline" size="lg">Contact Sales</BrandButton>
+              </Link>
             </div>
           </div>
         </div>

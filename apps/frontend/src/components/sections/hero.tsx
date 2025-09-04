@@ -36,18 +36,18 @@ export function Hero({ className }: HeroProps) {
 
           {/* CTA buttons */}
           <div className="mb-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <CTAButton asChild>
-              <Link href="/get-started">
+            <Link href="/get-started">
+              <CTAButton>
                 Get Started Free
                 <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </CTAButton>
+              </CTAButton>
+            </Link>
             
-            <BrandButton variant="outline" asChild>
-              <Link href="/demo">
+            <Link href="/demo">
+              <BrandButton variant="outline">
                 Watch Demo
-              </Link>
-            </BrandButton>
+              </BrandButton>
+            </Link>
           </div>
 
           {/* Trust indicators */}

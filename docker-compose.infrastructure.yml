@@ -1,0 +1,65 @@
+networks:
+  another-doctor:
+    driver: bridge
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: another-doctor-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: another_doctor
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - another-doctor
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis for caching and queue management
+  redis:
+    image: redis:7-alpine
+    container_name: another-doctor-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - another-doctor
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Qdrant Vector Database for AI/ML features
+  qdrant:
+    image: qdrant/qdrant:v1.7.0
+    container_name: another-doctor-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"  # HTTP API
+      - "6334:6334"  # gRPC API
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      QDRANT__SERVICE__HTTP_PORT: 6333
+      QDRANT__SERVICE__GRPC_PORT: 6334
+      QDRANT__LOG_LEVEL: INFO
+    networks:
+      - another-doctor
+    # Note: Qdrant container doesn't include curl/wget, so we rely on external health checks
+
+volumes:
+  postgres_data:
+  redis_data:
+  qdrant_data:

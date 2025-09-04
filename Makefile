@@ -7,12 +7,50 @@ help: ## Show this help message
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-15s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 setup: ## Initial project setup
-	@echo "Setting up Another Doctor development environment..."
-	cp .env.example .env
-	@echo "Please edit .env file with your configuration"
+	@echo "🚀 Setting up Another Doctor development environment..."
+	@echo "Checking prerequisites..."
+	@command -v docker >/dev/null 2>&1 || { echo "❌ Docker is not installed. Please install Docker first: https://docs.docker.com/get-docker/"; exit 1; }
+	@docker info >/dev/null 2>&1 || { echo "❌ Docker is not running. Please start Docker first."; exit 1; }
+	@command -v docker-compose >/dev/null 2>&1 || { echo "❌ docker-compose is not installed. Please install docker-compose."; exit 1; }
+	@echo "✅ Docker prerequisites check passed"
+	@if [ ! -f .env ]; then \
+		echo "📄 Creating .env file from template..."; \
+		cp .env.example .env; \
+		echo "✅ .env file created"; \
+	else \
+		echo "⚠️  .env file already exists, skipping..."; \
+	fi
+	@echo "🎉 Setup complete! Run 'make dev-up' to start the development environment."
 
-dev-up: ## Start complete development environment
+setup-full: ## Complete setup including Docker container initialization
+	@echo "🚀 Running full Another Doctor setup..."
+	@$(MAKE) setup
+	@echo "🐳 Initializing Docker containers..."
+	@echo "This may take several minutes on first run..."
 	./scripts/dev-start.sh
+	@echo "🎉 Full setup complete! Your development environment is ready."
+
+dev-up: ## Start infrastructure services (DB, Redis, Qdrant)
+	./scripts/dev-start.sh
+
+dev-manual: ## Start development environment (infrastructure + manual app servers)
+	@echo "🚀 Starting Another Doctor Development Environment (Manual Mode)"
+	@echo "============================================================"
+	@$(MAKE) dev-up-infra
+	@echo ""
+	@echo "📋 Next steps:"
+	@echo "1. In terminal 1: ./scripts/run-backend-local.sh"
+	@echo "2. In terminal 2: ./scripts/run-frontend-local.sh"
+	@echo ""
+	
+dev-up-infra: ## Start only infrastructure services
+	docker-compose -f docker-compose.infrastructure.yml up -d
+
+backend-manual: ## Start backend manually
+	./scripts/run-backend-local.sh
+
+frontend-manual: ## Start frontend manually  
+	./scripts/run-frontend-local.sh
 
 dev-up-tools: ## Start development environment with admin tools
 	./scripts/dev-start.sh --with-tools

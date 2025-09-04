@@ -4,25 +4,30 @@ FROM node:18-alpine AS base
 FROM base AS deps
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
-COPY apps/frontend/package*.json ./
-COPY pnpm-workspace.yaml ./
+# Copy workspace configuration
 COPY package.json ./
+COPY pnpm-workspace.yaml ./
+
+# Copy all package.json files to maintain workspace structure
+COPY apps/frontend/package*.json ./apps/frontend/
 COPY packages/ts-utils/package*.json ./packages/ts-utils/
 
-RUN corepack enable pnpm && pnpm install --frozen-lockfile
+# Install dependencies for the entire workspace
+RUN corepack enable pnpm && pnpm install --frozen-lockfile || pnpm install
 
 # Development stage
 FROM base AS development
 WORKDIR /app
 
-# Copy dependencies
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages ./packages
+# Copy entire workspace structure from deps
+COPY --from=deps /app ./
 
-# Copy source code
-COPY apps/frontend ./
+# Copy fresh source code (this will overwrite only the source files, not node_modules)
+COPY apps/frontend ./apps/frontend
 COPY packages/ts-utils ./packages/ts-utils
+
+# Set working directory to the frontend app
+WORKDIR /app/apps/frontend
 
 # Expose port
 EXPOSE 3000

@@ -1,0 +1,943 @@
+{
+	"info": {
+		"_postman_id": "12345678-1234-1234-1234-123456789abc",
+		"name": "Another Doctor API",
+		"description": "Complete API collection for the Another Doctor medical specialist matching platform",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Check if the API is running and healthy"
+					}
+				},
+				{
+					"name": "Root Endpoint",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								""
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "File Upload",
+			"item": [
+				{
+					"name": "Get Presigned URL",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "filename",
+									"value": "test-case.pdf",
+									"type": "text"
+								},
+								{
+									"key": "content_type",
+									"value": "application/pdf",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/upload/presigned-url",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"upload",
+								"presigned-url"
+							]
+						}
+					}
+				},
+				{
+					"name": "Direct File Upload",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/upload/direct",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"upload",
+								"direct"
+							]
+						}
+					}
+				},
+				{
+					"name": "Upload Text Case",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "text_content",
+									"value": "Patient: 65-year-old male presents with chest pain and shortness of breath. History: Patient reports crushing chest pain that started 2 hours ago, radiating to left arm. Associated with nausea and diaphoresis. Past medical history significant for hypertension and hyperlipidemia. Physical Exam: - BP: 160/90 mmHg - HR: 110 bpm, irregular - Lungs: crackles at bilateral bases - Heart: irregular rhythm, no murmurs EKG: ST elevation in leads II, III, aVF Lab Results: - Troponin I: 15.2 ng/mL (elevated) - CK-MB: 45 U/L (elevated) - BNP: 450 pg/mL",
+									"type": "text"
+								},
+								{
+									"key": "case_title",
+									"value": "Acute Chest Pain Case",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/upload/text",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"upload",
+								"text"
+							]
+						}
+					}
+				},
+				{
+					"name": "Serve Local File",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/upload/cases/{{case_id}}/input.txt",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"upload",
+								"cases",
+								"{{case_id}}",
+								"input.txt"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Task Processing",
+			"item": [
+				{
+					"name": "Create Generic Task",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"task_type\": \"diagnosis_analysis\",\n    \"payload\": {\n        \"case_id\": \"{{case_id}}\",\n        \"file_path\": \"cases/{{case_id}}/input.txt\",\n        \"user_id\": \"demo_user\"\n    },\n    \"delay_seconds\": 0\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/tasks/create",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tasks",
+								"create"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Task Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/tasks/status/{{task_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tasks",
+								"status",
+								"{{task_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Queue Diagnosis Analysis",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "case_id",
+									"value": "{{case_id}}",
+									"type": "text"
+								},
+								{
+									"key": "file_path",
+									"value": "cases/{{case_id}}/input.txt",
+									"type": "text"
+								},
+								{
+									"key": "user_id",
+									"value": "demo_user",
+									"type": "text"
+								},
+								{
+									"key": "delay_seconds",
+									"value": "0",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/tasks/diagnosis/analyze",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tasks",
+								"diagnosis",
+								"analyze"
+							]
+						}
+					}
+				},
+				{
+					"name": "Queue Specialist Matching",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "case_id",
+									"value": "{{case_id}}",
+									"type": "text"
+								},
+								{
+									"key": "diagnosis_data",
+									"value": "{\"primary_conditions\": [\"Cardiovascular Disease\"], \"suggested_specialties\": [\"Cardiology\"]}",
+									"type": "text"
+								},
+								{
+									"key": "user_id",
+									"value": "demo_user",
+									"type": "text"
+								},
+								{
+									"key": "delay_seconds",
+									"value": "0",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/tasks/specialist/match",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tasks",
+								"specialist",
+								"match"
+							]
+						}
+					}
+				},
+				{
+					"name": "Queue Notification",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "user_id",
+									"value": "demo_user",
+									"type": "text"
+								},
+								{
+									"key": "notification_type",
+									"value": "case_processed",
+									"type": "text"
+								},
+								{
+									"key": "data",
+									"value": "{\"case_id\": \"{{case_id}}\", \"message\": \"Your case has been processed\"}",
+									"type": "text"
+								},
+								{
+									"key": "delay_seconds",
+									"value": "0",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/tasks/notification/send",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tasks",
+								"notification",
+								"send"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Research Aggregation",
+			"item": [
+				{
+					"name": "Search All Sources",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/research/search?q=cardiovascular disease&max_results=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"research",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "cardiovascular disease"
+								},
+								{
+									"key": "max_results",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Search all research sources for a query"
+					}
+				},
+				{
+					"name": "Search Specific Sources",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/research/search?q=diabetes treatment&max_results=15&sources=pubmed,clinical_trials",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"research",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "diabetes treatment"
+								},
+								{
+									"key": "max_results",
+									"value": "15"
+								},
+								{
+									"key": "sources",
+									"value": "pubmed,clinical_trials"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Search Publications Only",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/research/publications?q=cancer immunotherapy&max_results=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"research",
+								"publications"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "cancer immunotherapy"
+								},
+								{
+									"key": "max_results",
+									"value": "20"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Search Clinical Trials Only",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/research/clinical-trials?q=alzheimer disease&max_results=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"research",
+								"clinical-trials"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "alzheimer disease"
+								},
+								{
+									"key": "max_results",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Search Grants Only",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/research/grants?q=machine learning medical imaging&max_results=15",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"research",
+								"grants"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "machine learning medical imaging"
+								},
+								{
+									"key": "max_results",
+									"value": "15"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Advanced Search (POST)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"CRISPR gene therapy\",\n    \"max_results_per_source\": 20,\n    \"include_sources\": [\"pubmed\", \"openalex\", \"clinical_trials\", \"nih_reporter\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/research/search",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"research",
+								"search"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Available Sources",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/research/sources",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"research",
+								"sources"
+							]
+						},
+						"description": "Get list of available research sources and their descriptions"
+					}
+				}
+			]
+		},
+		{
+			"name": "Doctor Search",
+			"item": [
+				{
+					"name": "Search Doctors",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/doctors/search?specialty=Cardiology&location=New York&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"doctors",
+								"search"
+							],
+							"query": [
+								{
+									"key": "specialty",
+									"value": "Cardiology"
+								},
+								{
+									"key": "location",
+									"value": "New York"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Doctor Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/doctors/{{doctor_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"doctors",
+								"{{doctor_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Doctor Publications",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/doctors/{{doctor_id}}/publications?limit=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"doctors",
+								"{{doctor_id}}",
+								"publications"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Doctor Clinical Trials",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/doctors/{{doctor_id}}/trials?limit=15",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"doctors",
+								"{{doctor_id}}",
+								"trials"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "15"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Specialist Matching",
+			"item": [
+				{
+					"name": "Find Specialist Matches",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"case_id\": \"{{case_id}}\",\n    \"conditions\": [\"Cardiovascular Disease\", \"Hypertension\"],\n    \"specialties_needed\": [\"Cardiology\", \"Internal Medicine\"],\n    \"location_preference\": \"New York\",\n    \"max_matches\": 10\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/matching/match",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"matching",
+								"match"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Case Matches",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/matching/case/{{case_id}}/matches?limit=15",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"matching",
+								"case",
+								"{{case_id}}",
+								"matches"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "15"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Approve Match",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "case_id",
+									"value": "{{case_id}}",
+									"type": "text"
+								},
+								{
+									"key": "doctor_id",
+									"value": "{{doctor_id}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/matching/approve-match",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"matching",
+								"approve-match"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Scoring Explanation",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/matching/scoring-explanation/{{case_id}}/{{doctor_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"matching",
+								"scoring-explanation",
+								"{{case_id}}",
+								"{{doctor_id}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Cases",
+			"item": [
+				{
+					"name": "Create Case",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Complex Cardiac Case\",\n    \"description\": \"Patient with multiple cardiovascular risk factors\",\n    \"conditions\": [\"Cardiovascular Disease\", \"Hypertension\"],\n    \"patient_age\": 65,\n    \"patient_gender\": \"male\",\n    \"priority\": \"high\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/cases/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"cases",
+								""
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Case Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/cases/{{case_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"cases",
+								"{{case_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "List Cases",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/cases/?skip=0&limit=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"cases",
+								""
+							],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string",
+			"description": "Base URL for the Another Doctor API"
+		},
+		{
+			"key": "case_id",
+			"value": "268954c0-4ba8-4a83-b1ef-aa870e3a051c",
+			"type": "string",
+			"description": "Sample case ID for testing"
+		},
+		{
+			"key": "task_id", 
+			"value": "local_task_1_1234567890",
+			"type": "string",
+			"description": "Sample task ID for testing"
+		},
+		{
+			"key": "doctor_id",
+			"value": "doctor_123",
+			"type": "string", 
+			"description": "Sample doctor ID for testing"
+		}
+	]
+}
