@@ -59,9 +59,5 @@ env/
 # TypeScript
 *.tsbuildinfo
 
-# Terraform
-infra/**/.terraform/
-infra/**/terraform.tfstate*
-infra/**/terraform.tfvars
-!infra/**/terraform.tfvars.example
-*.terraform.lock.hcl
+# GCP backup files (legacy)
+docs/GCP_DEPLOYMENT_GUIDE.md.backup

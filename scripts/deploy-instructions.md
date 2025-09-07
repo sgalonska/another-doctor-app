@@ -1,100 +1,91 @@
-# Another Doctor - Complete GCP Deployment Instructions
+# Another Doctor - Render Deployment Instructions
 
-Your Docker images are built successfully! Now we just need to authenticate and push them. Follow these steps:
+This application has been migrated from Google Cloud Platform to Render for simplified deployment and management.
 
-## Step 1: Authenticate with Google Cloud
+## Quick Start
 
-```bash
-# Authenticate (this will open browser)
-gcloud auth login
-
-# Set project
-gcloud config set project another-doctor-471116
-
-# Configure Docker authentication
-gcloud auth configure-docker us-central1-docker.pkg.dev
-```
-
-## Step 2: Push Docker Images
-
-Your images are already built. Just push them:
+Run the deployment script:
 
 ```bash
-# Push frontend image
-docker push us-central1-docker.pkg.dev/another-doctor-471116/another-doctor-prod-repo/frontend:latest
-
-# Push backend image  
-docker push us-central1-docker.pkg.dev/another-doctor-471116/another-doctor-prod-repo/backend:latest
+./scripts/deploy-render.sh
 ```
 
-## Step 3: Deploy Infrastructure
+## Manual Deployment Steps
 
-```bash
-cd infra/gcp
-terraform apply -var-file="environments/prod.tfvars" -auto-approve
-```
+### Step 1: Connect Repository to Render
 
-## Step 4: Set Up Domain Mapping
+1. Go to [Render Dashboard](https://dashboard.render.com)
+2. Sign up/Login and connect your GitHub account
+3. Click "New +" → "Blueprint"
+4. Select your "another-doctor-app" repository
+5. Render will automatically read `render.yaml` and create all services
 
-After deployment, get your frontend service URL:
+### Step 2: Configure Environment Variables
 
-```bash
-# Get frontend URL
-gcloud run services describe another-doctor-prod-frontend \
-    --platform=managed \
-    --region=us-central1 \
-    --format="value(status.url)"
-```
+**Backend Service:**
+- Set `STRIPE_SECRET_KEY` in the backend service environment variables
 
-Then create domain mapping:
+**Frontend Service:**  
+- Set `STRIPE_SECRET_KEY` in the frontend service environment variables
 
-```bash
-# Create domain mapping
-gcloud run domain-mappings create \
-    --service=another-doctor-prod-frontend \
-    --domain=app.another.doctor \
-    --region=us-central1
-```
+### Step 3: Configure Custom Domains
 
-## Step 5: Configure DNS
+**Backend API Domain** (`api.another.doctor`):
+1. Go to backend service → Settings → Custom Domains
+2. Add `api.another.doctor`
 
-In **Cloudflare DNS**, add this CNAME record:
-- **Name**: `app`
-- **Target**: `ghs.googlehosted.com`
+**Frontend Domain** (`app.another.doctor`):
+1. Go to frontend service → Settings → Custom Domains  
+2. Add `app.another.doctor`
 
-## Step 6: Verify Domain (if needed)
+### Step 4: Configure DNS
 
-If Google requires domain verification:
+In **Cloudflare DNS**, add these CNAME records:
 
-1. Go to [Google Search Console](https://search.google.com/search-console)
-2. Add `app.another.doctor` as a property
-3. Verify ownership using DNS TXT record method
+| Type | Name | Target |
+|------|------|--------|
+| CNAME | app | `another-doctor-frontend.onrender.com` |
+| CNAME | api | `another-doctor-backend.onrender.com` |
+
+## Services Created
+
+The deployment creates these services:
+
+- **Frontend**: Next.js web service with custom domain
+- **Backend**: FastAPI web service with custom domain  
+- **Database**: PostgreSQL managed database
+- **Cache**: Redis managed database
 
 ## Summary
 
-After these steps:
+After deployment:
 - ✅ Frontend: `https://app.another.doctor`
-- ✅ Backend: Available via Cloud Run URL 
-- ✅ SSL automatically provisioned by Google
-- ✅ Domain mapping complete
+- ✅ Backend: `https://api.another.doctor`
+- ✅ SSL automatically provisioned by Render
+- ✅ Automatic scaling and zero-downtime deployments
+- ✅ Built-in monitoring and logging
 
-**Note**: DNS propagation can take 15-60 minutes after adding the CNAME record.
+**Estimated Cost**: $28/month (4 × $7 starter services)
 
 ## Troubleshooting
 
-If you get authentication errors:
-```bash
-# Re-authenticate
-gcloud auth login
-gcloud auth application-default login
-```
+**Services not starting:**
+- Check build logs in Render dashboard
+- Verify environment variables are set correctly
+- Ensure `requirements.txt` and `package.json` are up to date
 
-If domain doesn't work after 1 hour:
-1. Check CNAME record in Cloudflare
-2. Verify domain ownership in Google Search Console
-3. Check Cloud Run logs for errors
+**Domain not working:**
+- Verify CNAME records in Cloudflare DNS
+- Wait up to 24 hours for SSL certificate provisioning
+- Check service status in Render dashboard
 
 ## Monitoring
 
-- **Cloud Console**: https://console.cloud.google.com/run?project=another-doctor-471116
-- **Logs**: https://console.cloud.google.com/logs/query?project=another-doctor-471116
+- **Render Dashboard**: https://dashboard.render.com
+- **Service Logs**: Available in each service's dashboard
+- **Metrics**: CPU, memory, and request metrics built-in
+
+## Documentation
+
+For detailed deployment information, see:
+- `./docs/RENDER_DEPLOYMENT_GUIDE.md`

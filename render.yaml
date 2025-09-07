@@ -1,0 +1,71 @@
+services:
+  # Backend API Service
+  - type: web
+    name: another-doctor-backend
+    runtime: python
+    buildCommand: "cd apps/backend && pip install -r requirements.txt"
+    startCommand: "cd apps/backend && uvicorn main:app --host 0.0.0.0 --port $PORT"
+    plan: starter
+    region: oregon
+    branch: main
+    rootDir: apps/backend
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: another-doctor-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: another-doctor-redis
+          property: connectionString
+      - key: ALLOWED_HOSTS
+        value: "*.onrender.com,app.another.doctor,api.another.doctor"
+      - key: BACKEND_CORS_ORIGINS
+        value: "https://app.another.doctor,https://another-doctor-frontend.onrender.com,http://localhost:3000"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: STRIPE_SECRET_KEY
+        sync: false  # Set manually in Render dashboard
+    domains:
+      - api.another.doctor
+
+  # Frontend Service  
+  - type: web
+    name: another-doctor-frontend
+    runtime: node
+    buildCommand: "cd apps/frontend && npm ci && npm run build"
+    startCommand: "cd apps/frontend && npm start"
+    plan: starter
+    region: oregon
+    branch: main
+    rootDir: apps/frontend
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: another-doctor-backend
+          property: host
+      - key: STRIPE_SECRET_KEY
+        sync: false  # Set manually in Render dashboard
+    domains:
+      - app.another.doctor
+
+databases:
+  # PostgreSQL Database
+  - name: another-doctor-db
+    databaseName: another_doctor
+    user: another_doctor_user
+    plan: starter
+    region: oregon
+    postgresMajorVersion: 15
+
+  # Redis Cache
+  - name: another-doctor-redis
+    plan: starter
+    region: oregon
+    maxmemoryPolicy: allkeys-lru
