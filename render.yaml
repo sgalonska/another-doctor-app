@@ -60,6 +60,7 @@ services:
     name: another-doctor-redis
     plan: free
     region: oregon
+    ipAllowList: []
 
 databases:
   # PostgreSQL Database
