@@ -109,7 +109,7 @@ export function StepFour({ onBack }: StepFourProps) {
       ];
       
       setDoctors(mockDoctors);
-    } catch (err) {
+    } catch (_) {
       setError('Failed to load doctor recommendations. Please try again.');
     } finally {
       setIsLoading(false);
@@ -125,8 +125,8 @@ export function StepFour({ onBack }: StepFourProps) {
       await navigator.clipboard.writeText(text);
       setCopiedItem(`${type}-${text}`);
       setTimeout(() => setCopiedItem(null), 2000); // Clear after 2 seconds
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
+    } catch (_) {
+      console.error('Failed to copy text');
     }
   };
 
@@ -149,7 +149,7 @@ export function StepFour({ onBack }: StepFourProps) {
       // Simulate payment processing for concierge service
       await new Promise(resolve => setTimeout(resolve, 2000));
       setConciergeSelected(true);
-    } catch (err) {
+    } catch (_) {
       setError('Failed to process concierge service. Please try again.');
     } finally {
       setIsProcessingConcierge(false);

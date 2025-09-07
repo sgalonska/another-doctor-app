@@ -52,7 +52,7 @@ export function DiagnosisAssistant() {
             if (stepNumber === 3 && data.processedDiagnosis) canAccessStep = true;
             // Allow step 4 if payment completed
             if (stepNumber === 4 && data.paymentCompleted) canAccessStep = true;
-          } catch (e) {
+          } catch (_) {
             // Invalid data, stay on step 1
           }
         }
@@ -66,7 +66,7 @@ export function DiagnosisAssistant() {
     if (savedData) {
       try {
         setDiagnosisData(JSON.parse(savedData));
-      } catch (e) {
+      } catch (_) {
         // Invalid data, clear it
         localStorage.removeItem('diagnosis-data');
       }
