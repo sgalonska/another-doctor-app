@@ -1,3 +1,10 @@
+serviceGroups:
+  - name: Another Doctor Production
+    services:
+      - another-doctor-backend
+      - another-doctor-frontend
+      - another-doctor-redis
+
 services:
   # Backend API Service
   - type: web
