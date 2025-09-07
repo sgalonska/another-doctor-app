@@ -55,6 +55,12 @@ services:
     domains:
       - app.another.doctor
 
+  # Redis Cache Service
+  - type: redis
+    name: another-doctor-redis
+    plan: free
+    region: oregon
+
 databases:
   # PostgreSQL Database
   - name: another-doctor-db
@@ -63,8 +69,3 @@ databases:
     plan: free
     region: oregon
     postgresMajorVersion: 15
-
-  # Redis Cache
-  - name: another-doctor-redis
-    plan: free
-    region: oregon
