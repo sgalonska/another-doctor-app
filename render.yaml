@@ -60,11 +60,11 @@ databases:
   - name: another-doctor-db
     databaseName: another_doctor
     user: another_doctor_user
-    plan: starter
+    plan: free
     region: oregon
     postgresMajorVersion: 15
 
   # Redis Cache
   - name: another-doctor-redis
-    plan: starter
+    plan: free
     region: oregon
