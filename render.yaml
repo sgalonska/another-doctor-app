@@ -4,6 +4,7 @@ serviceGroups:
       - another-doctor-backend
       - another-doctor-frontend
       - another-doctor-redis
+      - another-doctor-db
 
 services:
   # Backend API Service
