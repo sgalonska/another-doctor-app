@@ -4,7 +4,7 @@ services:
     name: another-doctor-backend
     runtime: python
     buildCommand: "cd apps/backend && pip install -r requirements.txt"
-    startCommand: "cd apps/backend && uvicorn main:app --host 0.0.0.0 --port $PORT"
+    startCommand: "cd apps/backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     plan: starter
     region: oregon
     branch: main
