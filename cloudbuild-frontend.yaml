@@ -1,0 +1,10 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/another-doctor-471116/another-doctor-prod-repo/frontend:latest', './apps/frontend']
+    id: 'build-frontend'
+
+images:
+  - 'us-central1-docker.pkg.dev/another-doctor-471116/another-doctor-prod-repo/frontend:latest'
+
+options:
+  substitution_option: 'ALLOW_LOOSE'

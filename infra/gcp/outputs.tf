@@ -45,10 +45,10 @@ output "storage_bucket_name" {
   value       = google_storage_bucket.main.name
 }
 
-output "qdrant_storage_bucket_name" {
-  description = "Qdrant storage bucket name"
-  value       = google_storage_bucket.qdrant_storage.name
-}
+# output "qdrant_storage_bucket_name" {
+#   description = "Qdrant storage bucket name"
+#   value       = google_storage_bucket.qdrant_storage.name
+# }
 
 # Artifact Registry outputs
 output "artifact_registry_url" {
@@ -68,15 +68,15 @@ output "frontend_url" {
 }
 
 
-output "workers_url" {
-  description = "Workers Cloud Run service URL"
-  value       = google_cloud_run_v2_service.workers.uri
-}
+# output "workers_url" {
+#   description = "Workers Cloud Run service URL"
+#   value       = google_cloud_run_v2_service.workers.uri
+# }
 
-output "qdrant_url" {
-  description = "Qdrant Cloud Run service URL"
-  value       = google_cloud_run_v2_service.qdrant.uri
-}
+# output "qdrant_url" {
+#   description = "Qdrant Cloud Run service URL"
+#   value       = google_cloud_run_v2_service.qdrant.uri
+# }
 
 # Service Account
 output "cloud_run_service_account_email" {

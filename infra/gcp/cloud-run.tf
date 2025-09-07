@@ -22,7 +22,7 @@ resource "google_cloud_run_v2_service" "backend" {
     }
 
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.main.repository_id}/backend:latest"
+      image = "python:3.11-slim"
       
       ports {
         container_port = 8000
@@ -134,7 +134,7 @@ resource "google_cloud_run_v2_service" "frontend" {
     }
 
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.main.repository_id}/frontend:latest"
+      image = "nginx:alpine"
       
       ports {
         container_port = 3000
