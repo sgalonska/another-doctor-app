@@ -68,4 +68,3 @@ databases:
   - name: another-doctor-redis
     plan: starter
     region: oregon
-    maxmemoryPolicy: allkeys-lru
