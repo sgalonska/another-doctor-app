@@ -9,6 +9,8 @@ services:
     region: oregon
     branch: main
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
       - key: ENVIRONMENT
         value: production
       - key: DATABASE_URL
