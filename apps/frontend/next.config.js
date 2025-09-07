@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
-  trailingSlash: true,
+  // Cloud Run deployment configuration
+  output: 'standalone',
   images: {
     unoptimized: true
   },

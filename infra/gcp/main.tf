@@ -48,6 +48,13 @@ variable "domain" {
   default     = ""
 }
 
+variable "stripe_secret_key" {
+  description = "Stripe secret key for payments"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 # Providers
 provider "google" {
   project = var.project_id
@@ -74,7 +81,6 @@ locals {
 # Enable required APIs
 resource "google_project_service" "required_apis" {
   for_each = toset([
-    "cloudsql.googleapis.com",
     "redis.googleapis.com",
     "run.googleapis.com",
     "storage.googleapis.com",
@@ -84,7 +90,9 @@ resource "google_project_service" "required_apis" {
     "cloudbuild.googleapis.com",
     "secretmanager.googleapis.com",
     "monitoring.googleapis.com",
-    "logging.googleapis.com"
+    "logging.googleapis.com",
+    "servicenetworking.googleapis.com",
+    "sqladmin.googleapis.com"
   ])
 
   project = var.project_id
@@ -204,7 +212,8 @@ resource "google_sql_database_instance" "main" {
 
   depends_on = [
     google_project_service.required_apis,
-    google_compute_global_address.private_ip_range
+    google_compute_global_address.private_ip_range,
+    google_service_networking_connection.private_vpc_connection
   ]
 }
 
@@ -255,7 +264,10 @@ resource "google_redis_instance" "main" {
   
   labels = local.labels
 
-  depends_on = [google_project_service.required_apis]
+  depends_on = [
+    google_project_service.required_apis,
+    google_service_networking_connection.private_vpc_connection
+  ]
 }
 
 # Cloud Storage bucket
@@ -353,6 +365,22 @@ resource "random_password" "app_secret_key" {
   special = true
 }
 
+# Stripe Secret Key for frontend
+resource "google_secret_manager_secret" "stripe_secret_key" {
+  secret_id = "${local.name_prefix}-stripe-secret-key"
+  
+  replication {
+    auto {}
+  }
+  
+  labels = local.labels
+}
+
+resource "google_secret_manager_secret_version" "stripe_secret_key" {
+  secret      = google_secret_manager_secret.stripe_secret_key.id
+  secret_data = var.stripe_secret_key != "" ? var.stripe_secret_key : "sk_test_placeholder"
+}
+
 # IAM for Secret Manager access
 resource "google_secret_manager_secret_iam_member" "cloud_run_db_password" {
   secret_id = google_secret_manager_secret.db_password.secret_id
@@ -362,6 +390,12 @@ resource "google_secret_manager_secret_iam_member" "cloud_run_db_password" {
 
 resource "google_secret_manager_secret_iam_member" "cloud_run_app_secret" {
   secret_id = google_secret_manager_secret.app_secret_key.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.cloud_run.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "cloud_run_stripe_secret" {
+  secret_id = google_secret_manager_secret.stripe_secret_key.secret_id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.cloud_run.email}"
 }
