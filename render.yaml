@@ -8,7 +8,6 @@ services:
     plan: starter
     region: oregon
     branch: main
-    rootDir: apps/backend
     envVars:
       - key: ENVIRONMENT
         value: production
@@ -41,7 +40,6 @@ services:
     plan: starter
     region: oregon
     branch: main
-    rootDir: apps/frontend
     envVars:
       - key: NODE_ENV
         value: production
